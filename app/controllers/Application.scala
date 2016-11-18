@@ -4,7 +4,7 @@ import javax.inject.Inject
 
 import io.circe.generic.auto._
 import io.circe.syntax._
-import model.Tables.{CatalogoRow, CategoriaRow}
+import model.Tables.{CatalogoRow, CategoriaRow, PrendaRow}
 import model.repos.{CatalgoRepo, CategoriaRepo, PrendaRepo, RepositoryUtils}
 import slick.driver.MySQLDriver.api.Table
 import play.api.libs.circe.Circe
@@ -23,7 +23,7 @@ class Application @Inject()(catalgoRepo: CatalgoRepo,
   }
 
   def catalogos = Action.async { request =>
-    for { c <- catalgoRepo.getAll } yield Ok(c.asJson.noSpaces)
+    getAction(catalgoRepo)
   }
 
   def catalogo = Action.async(circe.json[CatalogoRow]) { request =>
@@ -31,7 +31,7 @@ class Application @Inject()(catalgoRepo: CatalgoRepo,
   }
 
   def categorias = Action.async { request =>
-    for { c <- categoriaRepo.getAll } yield Ok(c.asJson.noSpaces)
+    getAction(categoriaRepo)
   }
 
   def categoria = Action.async(circe.json[CategoriaRow]) { request =>
@@ -39,16 +39,25 @@ class Application @Inject()(catalgoRepo: CatalgoRepo,
   }
 
   def prendas = Action.async { request =>
-    for { p <- prendaRepo.getAll } yield Ok(p.asJson.noSpaces)
+    getAction(prendaRepo)
   }
 
-  def insertAction[A <: Table[B], B](request: Request[B], repo: RepositoryUtils[A, B]) =
-    (for {
-      r <- repo.add(request.body)
-    } yield Ok(Message(error = false,
-      "Agregado satisfactoriamente").asJson.noSpaces)).recover {
-      case cause => Ok(Message(error = true,
-        cause.getMessage).asJson.noSpaces)
+  def prenda = Action.async(circe.json[PrendaRow]) { request =>
+    insertAction(request, prendaRepo)
+  }
+
+  def insertAction[A <: Table[B], B](request: Request[B], repo: RepositoryUtils[A, B]) = {
+    (for {r <- repo.add(request.body)} yield
+      Ok(Message(error = false, "Agregado satisfactoriamente").asJson.noSpaces))
+      .recover { case cause =>
+        Ok(Message(error = true, cause.getMessage).asJson.noSpaces)
+      }
+  }
+
+  def getAction[A <: Table[B], B](repo: RepositoryUtils[A, B]) = {
+    repo.getAll.map(c => Ok(c.asJson.noSpaces)) recover {
+      case cause => Ok(Message(error = false, cause.getMessage).asJson.noSpaces)
     }
+  }
 
 }

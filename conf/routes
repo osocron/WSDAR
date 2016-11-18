@@ -11,9 +11,11 @@ POST    /api/catalogo               controllers.Application.catalogo
 
 # Categorias
 GET     /api/categorias             controllers.Application.categorias
+POST    /api/categoria               controllers.Application.categoria
 
 # Prendas
 GET     /api/prendas                controllers.Application.prendas
+POST    /api/prenda               controllers.Application.prenda
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)
